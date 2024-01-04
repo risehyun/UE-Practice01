@@ -11,6 +11,8 @@ USPigeon::USPigeon()
 void USPigeon::Fly()
 {
 	UE_LOG(LogTemp, Log, TEXT("%s is now flying."), *Name);
+
+	OnPigeonFlying.Broadcast(*Name, ID);
 }
 
 void USPigeon::Serialize(FArchive& Ar)

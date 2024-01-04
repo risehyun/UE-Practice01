@@ -21,6 +21,9 @@ public:
 
 	virtual void Shutdown() override;
 
+	UFUNCTION()
+	void HandlePigeonFlying(const FString& InName, const int32 InID);
+
 private:
 	UPROPERTY()
 	FString Name;
@@ -33,4 +36,6 @@ private:
 	// 또한 헤더파일들이 서로를 순환 참조하면서 무한 루프에 빠지는 것을 방지할 수도 있다.
 	// 따라서 꼭 필요한 경우가 아니라면 헤더 파일에서 다른 헤더파일을 인클루드 하지 않고 전방선언을 활용함.
 
+	UPROPERTY()
+	TObjectPtr<class USPigeon> SpawnedPigeon;
 };
