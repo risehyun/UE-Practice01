@@ -6,6 +6,8 @@
 #include "SUnrealObjectClass.h"
 #include "Example/SFlyable.h"
 #include "Example/SPigeon.h"
+#include "JsonObjectConverter.h"
+#include "UObject/SavePackage.h"
 
 USMyGameInstance::USMyGameInstance()
 {
@@ -124,6 +126,62 @@ void USMyGameInstance::Init()
     USPigeon* Pigeon77 = NewObject<USPigeon>();
     Pigeon77->Serialize(MemoryReaderAr);
     UE_LOG(LogTemp, Log, TEXT("[Pigeon77] Name: %s, ID: %d"), *Pigeon77->GetName(), Pigeon77->GetID());
+
+
+    // JSON 사용 실습
+    // Json 파일이 저장될 위치 경로를 정해준다.
+    const FString JsonDataFileName(TEXT("StudyJsonFile.txt"));
+    FString AbsolutePathForJsonData = FPaths::Combine(*SavedDir, *JsonDataFileName);
+    FPaths::MakeStandardFilename(AbsolutePathForJsonData);
+
+    /*
+        json 파일 포맷에 뭔가를 저장할 때 
+        json object와 json value를 사용할 수 있다.
+
+        json object의 경우 new object한 것을 저장하거나 읽을 때 쓰는 구조체이다.
+
+        반면 오브젝트 단위가 아닌 단순 값만 저장하거나 읽고 싶을 때는 
+        json value를 사용하면 된다.
+    
+    */
+
+    // json 오브젝트를 하나 만들어준 다음
+    TSharedRef<FJsonObject> SrcJsonObject = MakeShared<FJsonObject>();
+    FJsonObjectConverter::UStructToJsonObject(SerializedPigeon->GetClass(), SerializedPigeon, SrcJsonObject);
+
+    // json 오브젝트의 경우 공유를 할 때 안전하게 공유할 필요가 있다.
+    // 따라서 TShared 레퍼런스를 사용한다.
+    // 물론 TObject를 사용해도 되지만 굳이 이렇게 한 이유는 
+    // 레퍼런스를 사용하면 nullptr로 초기화가 되지 않는 등의 장점이 있으므로 
+    // 조금 더 안전하게 코드를 짜기 위함이다.
+
+    // json을 저장하기 위한 아카이브를 사용해서 세이브를 한다.
+    FString JsonOutString;
+    TSharedRef<TJsonWriter<TCHAR>> JsonWriterAr = TJsonWriterFactory<TCHAR>::Create(&JsonOutString);
+    if (true == FJsonSerializer::Serialize(SrcJsonObject, JsonWriterAr))
+    {
+        // 지정된 경로에 저장을 해달라고 요청한다.
+        FFileHelper::SaveStringToFile(JsonOutString, *AbsolutePathForJsonData);
+    }
+
+    // 이제 바로 위에서 저장된 내용을 읽어 온다.
+    // 직전과 같이 읽어올 아카이브를 가지고 데이터를 로드를 한 다음
+    FString JsonInString;
+    FFileHelper::LoadFileToString(JsonInString, *AbsolutePathForJsonData);
+    TSharedRef<TJsonReader<TCHAR>> JsonReaderAr = TJsonReaderFactory<TCHAR>::Create(JsonInString);
+
+    // 읽어온 저장되어 있던 데이터를 디시리얼라이즈 해줄 준비를 한다.
+    TSharedPtr<FJsonObject> DstJsonObject;
+    // 만약 데이터 디시리얼라이즈에 성공했다면
+    if (true == FJsonSerializer::Deserialize(JsonReaderAr, DstJsonObject))
+    {
+        // 읽어온 데이터를 사용해서 개체를 만든다.
+        USPigeon* Pigeon78 = NewObject<USPigeon>();
+        if (true == FJsonObjectConverter::JsonObjectToUStruct(DstJsonObject.ToSharedRef(), Pigeon78->GetClass(), Pigeon78))
+        {
+            UE_LOG(LogTemp, Log, TEXT("[Pigeon78] Name: %s, ID: %d"), *Pigeon78->GetName(), Pigeon78->GetID());
+        }
+    }
 }
 
 void USMyGameInstance::Shutdown()
