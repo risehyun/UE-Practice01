@@ -5,11 +5,12 @@
 #include "Components/BoxComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "GameFramework/RotatingMovementComponent.h"
 
 // Sets default values
 ASTorch::ASTorch()
 {
-    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = false;
 
     BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
     SetRootComponent(BoxComponent);
@@ -36,14 +37,17 @@ ASTorch::ASTorch()
     {
         ParticleSystemComponent->SetTemplate(ParticleTemplate.Object);
     }
+
+    RotatingMovementComponent = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovementComponent"));
 }
 
 // Called when the game starts or when spawned
 void ASTorch::BeginPlay()
 {
-	Super::BeginPlay();
+	Super::PostInitializeComponents();
 
     RotationSpeed = 300.f;
+    RotatingMovementComponent->RotationRate = FRotator(0.f, RotationSpeed, 0.f);
 }
 
 // Called every frame
@@ -51,5 +55,5 @@ void ASTorch::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    AddActorWorldRotation(FRotator(0.f, RotationSpeed * DeltaTime, 0.f));
+ //   AddActorWorldRotation(FRotator(0.f, RotationSpeed * DeltaTime, 0.f));
 }

@@ -37,4 +37,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ASTorch", Meta = (AllowPrivateAccess))
 	float RotationSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ASElectricityPole, meta = (AllowPrivateAccess))
+	TObjectPtr<class URotatingMovementComponent> RotatingMovementComponent;
+
 };
