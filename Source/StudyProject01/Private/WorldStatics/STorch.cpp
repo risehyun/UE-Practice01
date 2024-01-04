@@ -9,7 +9,7 @@
 // Sets default values
 ASTorch::ASTorch()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
 
     BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
     SetRootComponent(BoxComponent);
@@ -42,7 +42,8 @@ ASTorch::ASTorch()
 void ASTorch::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+    RotationSpeed = 300.f;
 }
 
 // Called every frame
@@ -50,5 +51,5 @@ void ASTorch::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    AddActorWorldRotation(FRotator(0.f, RotationSpeed * DeltaTime, 0.f));
 }
-
