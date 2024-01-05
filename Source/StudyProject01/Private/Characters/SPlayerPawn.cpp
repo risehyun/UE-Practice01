@@ -2,65 +2,66 @@
 
 
 #include "Characters/SPlayerPawn.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/FloatingPawnMovement.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 
 ASPlayerPawn::ASPlayerPawn()
 {
-    PrimaryActorTick.bCanEverTick = true;
-}
+    PrimaryActorTick.bCanEverTick = false;
 
-void ASPlayerPawn::PostInitializeComponents()
-{
-    UE_LOG(LogTemp, Log, TEXT("                Start ASPlayerPawn::      PostInitializeComponents()"));
-    Super::PostInitializeComponents();
-    UE_LOG(LogTemp, Log, TEXT("                End   ASPlayerPawn::      PostInitializeComponents()"));
-}
+    float CharacterHalfHeight = 95.f;
+    float CharacterRadius = 40.f;
 
-void ASPlayerPawn::PossessedBy(AController* NewController)
-{
-    UE_LOG(LogTemp, Log, TEXT("                Start ASPlayerPawn::      PossessedBy(ASPlayerController)"));
-    Super::PossessedBy(NewController);
-    UE_LOG(LogTemp, Log, TEXT("                End   ASPlayerPawn::      PossessedBy(ASPlayerController)"));
-}
+#pragma region InitializeCapsuleComponent
+    CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
+    SetRootComponent(CapsuleComponent);
+    CapsuleComponent->SetCapsuleHalfHeight(CharacterHalfHeight);
+    CapsuleComponent->SetCapsuleRadius(CharacterRadius);
+#pragma endregion
 
-void ASPlayerPawn::UnPossessed()
-{
-    UE_LOG(LogTemp, Log, TEXT("                Start ASPlayerPawn::      UnPossessed()"));
-    Super::UnPossessed();
-    UE_LOG(LogTemp, Log, TEXT("                End   ASPlayerPawn::      UnPossessed()"));
-}
+#pragma region InitializeSkeletalMesh
+    SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
+    SkeletalMeshComponent->SetupAttachment(RootComponent);
+    FVector PivotPosition(0.f, 0.f, -CharacterHalfHeight);
+    FRotator PivotRotation(0.f, -90.f, 0.f);
+    SkeletalMeshComponent->SetRelativeLocationAndRotation(PivotPosition, PivotRotation);
+    //static ConstructorHelpers::FObjectFinder<USkeletalMesh> SkeletalMeshAsset(TEXT("오브젝트 패스"));
+    //if (true == SkeletalMeshAsset.Succeeded())
+    //{
+    //    SkeletalMeshComponent->SetSkeletalMesh(SkeletalMeshAsset.Object);
+    //}
+#pragma endregion
 
-void ASPlayerPawn::Tick(float DeltaSeconds)
-{
-    static bool bOnce = false;
-    if (false == bOnce)
-    {
-        UE_LOG(LogTemp, Log, TEXT("                Start ASPlayerPawn::      Tick()"));
-    }
-    Super::Tick(DeltaSeconds);
-    if (false == bOnce)
-    {
-        UE_LOG(LogTemp, Log, TEXT("                End   ASPlayerPawn::      Tick()"));
-        bOnce = true;
-    }
-}
+#pragma region InitializeCamera
+    SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
+    SpringArmComponent->SetupAttachment(RootComponent);
+    SpringArmComponent->TargetArmLength = 400.f;
+    SpringArmComponent->SetRelativeRotation(FRotator(-15.f, 0.f, 0.f));
 
-void ASPlayerPawn::EndPlay(EEndPlayReason::Type EndPlayReason)
-{
-    UE_LOG(LogTemp, Log, TEXT("                Start ASPlayerPawn::      EndPlay()"));
-    Super::EndPlay(EndPlayReason);
-    UE_LOG(LogTemp, Log, TEXT("                End   ASPlayerPawn::      EndPlay()"));
+    CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
+    CameraComponent->SetupAttachment(SpringArmComponent);
+#pragma endregion
+
+    FloatingPawnMovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingPawnMovementComponent"));
+
 }
 
 void ASPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-    UE_LOG(LogTemp, Log, TEXT("                Start ASPlayerPawn::      SetupPlayerInputComponent(PlayerInputComponent)"));
     Super::SetupPlayerInputComponent(PlayerInputComponent);
-    UE_LOG(LogTemp, Log, TEXT("                End   ASPlayerPawn::      SetupPlayerInputComponent(PlayerInputComponent)"));
+
+    PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &ThisClass::UpDown);
+    PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &ThisClass::LeftRight);
 }
 
-void ASPlayerPawn::BeginPlay()
+void ASPlayerPawn::UpDown(float InAxisValue)
 {
-    UE_LOG(LogTemp, Log, TEXT("                Start ASPlayerPawn::      BeginPlay()"));
-    Super::BeginPlay();
-    UE_LOG(LogTemp, Log, TEXT("                End   ASPlayerPawn::      BeginPlay()"));
+    AddMovementInput(GetActorForwardVector(), InAxisValue);
+}
+
+void ASPlayerPawn::LeftRight(float InAxisValue)
+{
+    AddMovementInput(GetActorRightVector(), InAxisValue);
 }

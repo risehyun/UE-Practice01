@@ -17,19 +17,12 @@ class STUDYPROJECT01_API ASPlayerController : public APlayerController
 public:
     ASPlayerController();
 
-    virtual void PostInitializeComponents() override;
-
-    virtual void PlayerTick(float DeltaSeconds) override;
-
 protected:
-    virtual void SetupInputComponent() override;
-
-    virtual void OnPossess(APawn* aPawn) override;
-
-    virtual void OnUnPossess() override;
-
     virtual void BeginPlay() override;
 
-    virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
+    virtual void SetupInputComponent() override;
+
+private:
+    void LeftRight(float InAxisValue);
 
 };

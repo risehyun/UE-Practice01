@@ -5,62 +5,26 @@
 
 ASPlayerController::ASPlayerController()
 {
+	// 액터의 Tick이 돌아야 입력도 처리할 수 있음.
 	PrimaryActorTick.bCanEverTick = true;
-}
-
-void ASPlayerController::PostInitializeComponents()
-{
-    UE_LOG(LogTemp, Warning, TEXT("       Start ASPlayerController::PostInitializeComponents()"));
-    Super::PostInitializeComponents();
-    UE_LOG(LogTemp, Warning, TEXT("       End   ASPlayerController::PostInitializeComponents()"));
-}
-
-void ASPlayerController::PlayerTick(float DeltaSeconds)
-{
-    static bool bOnce = false;
-    if (false == bOnce)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("       Start ASPlayerController::PlayerTick()"));
-    }
-    Super::PlayerTick(DeltaSeconds);
-    if (false == bOnce)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("       End   ASPlayerController::PlayerTick()"));
-        bOnce = true;
-    }
 }
 
 void ASPlayerController::SetupInputComponent()
 {
-    UE_LOG(LogTemp, Warning, TEXT("       Start ASPlayerController::SetupInputComponent()"));
     Super::SetupInputComponent();
-    UE_LOG(LogTemp, Warning, TEXT("       End   ASPlayerController::SetupInputComponent()"));
+
+    InputComponent->BindAxis(TEXT("LeftRight"), this, &ThisClass::LeftRight);
 }
 
-void ASPlayerController::OnPossess(APawn* aPawn)
+void ASPlayerController::LeftRight(float InAxisValue)
 {
-    UE_LOG(LogTemp, Warning, TEXT("       Start ASPlayerController::OnPossess(ASPlayerPawn)"));
-    Super::OnPossess(aPawn);
-    UE_LOG(LogTemp, Warning, TEXT("       End   ASPlayerController::OnPossess(ASPlayerPawn)"));
-}
-
-void ASPlayerController::OnUnPossess()
-{
-    UE_LOG(LogTemp, Warning, TEXT("       Start ASPlayerController::OnUnPossess()"));
-    Super::OnUnPossess();
-    UE_LOG(LogTemp, Warning, TEXT("       End   ASPlayerController::OnUnPossess()"));
+    UE_LOG(LogTemp, Error, TEXT("ASPlayerController::LeftRight(%.3f)"), InAxisValue);
 }
 
 void ASPlayerController::BeginPlay()
 {
-    UE_LOG(LogTemp, Warning, TEXT("       Start ASPlayerController::BeginPlay()"));
     Super::BeginPlay();
-    UE_LOG(LogTemp, Warning, TEXT("       End   ASPlayerController::BeginPlay()"));
-}
 
-void ASPlayerController::EndPlay(EEndPlayReason::Type EndPlayReason)
-{
-    UE_LOG(LogTemp, Warning, TEXT("       Start ASPlayerController::EndPlay()"));
-    Super::EndPlay(EndPlayReason);
-    UE_LOG(LogTemp, Warning, TEXT("       End   ASPlayerController::EndPlay()"));
+    FInputModeGameOnly InputModeGameOnly;
+    SetInputMode(InputModeGameOnly);
 }
