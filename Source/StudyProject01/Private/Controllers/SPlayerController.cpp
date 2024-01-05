@@ -1,4 +1,4 @@
-// SPlayerController.h
+// SPlayerController.cpp
 
 
 #include "Controllers/SPlayerController.h"
@@ -13,7 +13,7 @@ void ASPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
 
-    InputComponent->BindAxis(TEXT("LeftRight"), this, &ThisClass::LeftRight);
+ //   InputComponent->BindAxis(TEXT("LeftRight"), this, &ThisClass::LeftRight);
 }
 
 void ASPlayerController::LeftRight(float InAxisValue)

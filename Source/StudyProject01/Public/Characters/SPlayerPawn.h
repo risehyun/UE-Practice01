@@ -18,6 +18,8 @@ public:
 protected:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+    virtual void BeginPlay() override;
+
 private:
     void UpDown(float InAxisValue);
 

@@ -32,6 +32,15 @@ ASPlayerPawn::ASPlayerPawn()
     //{
     //    SkeletalMeshComponent->SetSkeletalMesh(SkeletalMeshAsset.Object);
     //}
+
+    ////static ConstructorHelpers::FClassFinder<UAnimInstance> AnimInstanceClassInfo(TEXT("/Script/Engine.AnimBlueprint'/Game/StudyProject/Animations/AnimationBlueprints/ABP_PlayerPawn.ABP_PlayerPawn_C'"));
+    //static ConstructorHelpers::FClassFinder<UAnimInstance> AnimInstanceClassInfo(TEXT("'/Game/StudyProject/Animations/AnimationBlueprints/ABP_PlayerPawn.ABP_PlayerPawn_C'"));
+
+    //// 위 오브젝트 패스 대신, 작은 따옴표 안의 내용만으로도 가능함.
+    //if (true == AnimInstanceClassInfo.Succeeded())
+    //{
+    //    SkeletalMeshComponent->SetAnimClass(AnimInstanceClassInfo.Class);
+    //}
 #pragma endregion
 
 #pragma region InitializeCamera
@@ -54,6 +63,19 @@ void ASPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
     PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &ThisClass::UpDown);
     PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &ThisClass::LeftRight);
+}
+
+void ASPlayerPawn::BeginPlay()
+{
+    Super::BeginPlay();
+
+    SkeletalMeshComponent->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+
+    UAnimationAsset* AnimationAsset = LoadObject<UAnimationAsset>(SkeletalMeshComponent, TEXT("/Script/Engine.AnimSequence'/Game/ParagonKwang/Characters/Heroes/Kwang/Animations/Jog_Fwd.Jog_Fwd'"));
+    if (nullptr != AnimationAsset)
+    {
+        SkeletalMeshComponent->PlayAnimation(AnimationAsset, true);
+    }
 }
 
 void ASPlayerPawn::UpDown(float InAxisValue)
