@@ -34,6 +34,8 @@ ASRPGCharacter::ASRPGCharacter()
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->bUseControllerDesiredRotation = false;
     GetCharacterMovement()->RotationRate = FRotator(0.f, 480.f, 0.f);
+
+    GetCapsuleComponent()->SetCollisionProfileName(TEXT("SCharacter"));
 }
 
 void ASRPGCharacter::BeginPlay()
