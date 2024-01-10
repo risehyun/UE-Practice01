@@ -17,6 +17,11 @@ public class StudyProject01 : ModuleRules
 
             // Enhanced Input
             "EnhancedInput",
+
+                        // AI
+            "NavigationSystem",
+            "AIModule",
+            "GameplayTasks"
              });
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
