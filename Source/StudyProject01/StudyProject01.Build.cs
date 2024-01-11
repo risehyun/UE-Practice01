@@ -27,8 +27,11 @@ public class StudyProject01 : ModuleRules
             "UMG",
              });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { });
-
+        PrivateDependencyModuleNames.AddRange(new string[]
+        { 
+            // Custom Modules
+            "StudyProjectSettings",
+        });
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 

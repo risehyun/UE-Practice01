@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "Engine/DataTable.h"
+#include "Engine/AssetManager.h"
 #include "SMyGameInstance.generated.h"
 
 /**
@@ -45,6 +46,8 @@ public:
     const UDataTable* GetCharacterStatDataTable() { return CharacterStatDataTable; }
 
     FSStatTableRow* USMyGameInstance::GetCharacterStatDataTableRow(int32 InLevel);
+
+    FStreamableManager StreamableManager = FStreamableManager();
 
 
 //	UFUNCTION()
