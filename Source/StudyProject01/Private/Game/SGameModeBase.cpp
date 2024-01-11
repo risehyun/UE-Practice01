@@ -4,6 +4,7 @@
 #include "Game/SGameModeBase.h"
 #include "Controllers/SPlayerController.h"
 #include "Characters/SPlayerPawn.h"
+#include "Game/SPlayerState.h"
 
 ASGameModeBase::ASGameModeBase()
 {
@@ -16,4 +17,15 @@ void ASGameModeBase::InitGame(const FString& MapName, const FString& Options, FS
     UE_LOG(LogTemp, Error, TEXT("         Start ASGameMode::        InitGame()"));
     Super::InitGame(MapName, Options, ErrorMessage);
     UE_LOG(LogTemp, Error, TEXT("         End   ASGameMode::        InitGame()"));
+}
+
+void ASGameModeBase::PostLogin(APlayerController* NewPlayer)
+{
+    Super::PostLogin(NewPlayer);
+
+    ASPlayerState* PlayerState = NewPlayer->GetPlayerState<ASPlayerState>();
+    if (true == ::IsValid(PlayerState))
+    {
+        PlayerState->InitPlayerState();
+    }
 }

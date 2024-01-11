@@ -12,6 +12,7 @@
 #include "Component/SWidgetComponent.h"
 #include "UI/StudyUserWidget.h"
 #include "UI/SW_HPBar.h"
+#include "Game/SPlayerState.h"
 
 ASNonPlayerCharacter::ASNonPlayerCharacter()
 {
@@ -141,16 +142,29 @@ float ASNonPlayerCharacter::TakeDamage(float Damage, FDamageEvent const& DamageE
 
     if (StatComponent->GetCurrentHP() < KINDA_SMALL_NUMBER)
     {
-        ASRPGCharacter* DamageCauserCharacter = Cast<ASRPGCharacter>(DamageCauser);
-        if (true == ::IsValid(DamageCauserCharacter))
-        {
-            DamageCauserCharacter->SetCurrentEXP(DamageCauserCharacter->GetCurrentEXP() + 5);
-        }
+        //ASRPGCharacter* DamageCauserCharacter = Cast<ASRPGCharacter>(DamageCauser);
+        //if (true == ::IsValid(DamageCauserCharacter))
+        //{
+        //    DamageCauserCharacter->SetCurrentEXP(DamageCauserCharacter->GetCurrentEXP() + 5);
+        //}
 
         ASAIController* AIController = Cast<ASAIController>(GetController());
         if (true == ::IsValid(AIController))
         {
             AIController->EndAI();
+        }
+
+        if (true == ::IsValid(LastHitBy))
+        {
+            ASCharacter* DamageCauserCharacter = Cast<ASCharacter>(LastHitBy->GetPawn());
+            if (true == ::IsValid(DamageCauserCharacter))
+            {
+                ASPlayerState* PS = Cast<ASPlayerState>(DamageCauserCharacter->GetPlayerState());
+                if (true == ::IsValid(PS))
+                {
+                    PS->SetCurrentEXP(PS->GetCurrentEXP() + 20.f);
+                }
+            }
         }
     }
 
