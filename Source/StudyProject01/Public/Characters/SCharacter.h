@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// SCharacter.h
 
 #pragma once
 
@@ -15,15 +15,24 @@ public:
 	// Sets default values for this character's properties
 	ASCharacter();
 
-	float GetMaxHP() const { return MaxHP; }
+	//float GetMaxHP() const { return MaxHP; }
 
-	float GetCurrentHP() const { return CurrentHP; }
+	//float GetCurrentHP() const { return CurrentHP; }
 
-	void SetMaxHP(float InMaxHP) { MaxHP = InMaxHP; }
+	//void SetMaxHP(float InMaxHP) { MaxHP = InMaxHP; }
 
-	void SetCurrentHP(float InCurrentHP) { CurrentHP = InCurrentHP; }
+	//void SetCurrentHP(float InCurrentHP) { CurrentHP = InCurrentHP; }
 
-	bool IsDead() const { return bIsDead; }
+	//bool IsDead() const { return bIsDead; }
+
+	virtual void BeginPlay() override;
+
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	class USStatComponent* GetStatComponent() { return StatComponent; }
+
+	UFUNCTION()
+	virtual void OnCharacterDeath();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess))
@@ -40,4 +49,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ASRPGCharacter", Meta = (AllowPrivateAccess))
 	uint8 bIsDead : 1;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ASPlayerCharacter, Meta = (AllowPrivateAccess))
+	TObjectPtr<class USStatComponent> StatComponent;
 };

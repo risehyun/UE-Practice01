@@ -39,6 +39,8 @@ private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "USAnimInstance", Meta = (AllowPrivateAccess))
     uint8 bIsDead : 1;
 
+    UFUNCTION()
+    void OnCharacterDeath();
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "USAnimInstance")

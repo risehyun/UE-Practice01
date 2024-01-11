@@ -79,6 +79,7 @@ float ASRPGCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
 {
     float FinalDamageAmount = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
+    /*
     CurrentHP = FMath::Clamp(CurrentHP - FinalDamageAmount, 0.f, MaxHP);
 
     if (CurrentHP < KINDA_SMALL_NUMBER)
@@ -90,6 +91,7 @@ float ASRPGCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
     }
 
     UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%s [%.1f / %.1f]"), *GetName(), CurrentHP, MaxHP));
+    */
 
     return FinalDamageAmount;
 }
