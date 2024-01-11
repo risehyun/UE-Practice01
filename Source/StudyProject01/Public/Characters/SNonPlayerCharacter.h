@@ -25,11 +25,16 @@ public:
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	virtual void SetWidget(class UStudyUserWidget* InStudyUserWidget) override;
+
 private:
 	void Attack();
 
 	UFUNCTION()
 	void OnAttackAnimMontageEnded(class UAnimMontage* Montage, bool bIsInterrupt);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASNonPlayerCharacter", Meta = (AllowPrivateAccess))
+	TObjectPtr<class USWidgetComponent> WidgetComponent;
 
 private:
 	float AttackRange = 200.f;

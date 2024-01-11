@@ -34,6 +34,9 @@ public:
 	UFUNCTION()
 	virtual void OnCharacterDeath();
 
+	virtual void SetWidget(class UStudyUserWidget* InStudyUserWidget) {}
+
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess))
 	TObjectPtr<class USpringArmComponent> SpringArmComponent;
