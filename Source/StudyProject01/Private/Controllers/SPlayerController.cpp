@@ -5,6 +5,7 @@
 #include "Component/SStatComponent.h"
 #include "Characters/SRPGCharacter.h"
 #include "Controllers/SPlayerController.h"
+#include "Blueprint/UserWidget.h"
 
 ASPlayerController::ASPlayerController()
 {
@@ -55,4 +56,42 @@ void ASPlayerController::BeginPlay()
             }
         }
     }
+
+    if (true == ::IsValid(MenuUIClass))
+    {
+        MenuUIInstance = CreateWidget<UUserWidget>(this, MenuUIClass);
+        if (true == ::IsValid(MenuUIInstance))
+        {
+            MenuUIInstance->AddToViewport(3); // 상위에 띄움.
+
+            MenuUIInstance->SetVisibility(ESlateVisibility::Collapsed);
+        }
+    }
+}
+
+void ASPlayerController::ToggleMenu()
+{
+    if (false == bIsMenuOn)
+    {
+        MenuUIInstance->SetVisibility(ESlateVisibility::Visible);
+
+        FInputModeUIOnly Mode;
+        Mode.SetWidgetToFocus(MenuUIInstance->GetCachedWidget());
+        SetInputMode(Mode);
+
+        // SetPause(true); 만약 게임 일시 정지를 원한다면.
+        bShowMouseCursor = true;
+    }
+    else
+    {
+        MenuUIInstance->SetVisibility(ESlateVisibility::Collapsed);
+
+        FInputModeGameOnly InputModeGameOnly;
+        SetInputMode(InputModeGameOnly);
+
+        // SetPause(false); 만약 게임 일시 정지를 원한다면.
+        bShowMouseCursor = false;
+    }
+
+    bIsMenuOn = !bIsMenuOn;
 }
