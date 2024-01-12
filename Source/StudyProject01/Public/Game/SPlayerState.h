@@ -1,9 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// SPlayerState.h
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Game/SPlayerStateSave.h"
 #include "SPlayerState.generated.h"
 
 /**
@@ -44,6 +45,11 @@ public:
 
     static FString SaveSlotName;
 
+    ETeamType GetCurrentTeamType() const { return CurrentTeamType; }
+
+    void SetCurrentTeamType(ETeamType InCurrentTeamType) { CurrentTeamType = InCurrentTeamType; }
+
+
 private:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "USStatComponent", Meta = (AllowPrivateAccess = true))
     TObjectPtr<class USMyGameInstance> SGI;
@@ -59,5 +65,8 @@ private:
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "USStatComponent", Meta = (AllowPrivateAccess = true))
     float CurrentEXP = 0;
+
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "ASPlayerState", Meta = (AllowPrivateAccess))
+    ETeamType CurrentTeamType = ETeamType::Red;
 
 };

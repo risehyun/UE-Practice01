@@ -89,6 +89,19 @@ void ASRPGCharacter::BeginPlay()
         }
     }
 
+    //const USPlayerCharacterSettings* CDO = GetDefault<USPlayerCharacterSettings>();
+    //int32 SelectedMeshIndex = static_cast<int32>(PS->GetCurrentTeamType()) - 1;
+    //CurrentPlayerCharacterMeshPath = CDO->PlayerCharacterMeshPaths[SelectedMeshIndex];
+
+    //if (USMyGameInstance* SGI = Cast<USMyGameInstance>(GetGameInstance()))
+    //{
+    //    AssetStreamableHandle = SGI->StreamableManager.RequestAsyncLoad(
+    //        CurrentPlayerCharacterMeshPath,
+    //        FStreamableDelegate::CreateUObject(this, &ThisClass::OnAssetLoaded)
+    //    );
+    //}
+
+        
     const USPlayerCharacterSettings* CDO = GetDefault<USPlayerCharacterSettings>();
     int32 RandIndex = FMath::RandRange(0, CDO->PlayerCharacterMeshPaths.Num() - 1);
     CurrentPlayerCharacterMeshPath = CDO->PlayerCharacterMeshPaths[RandIndex];
@@ -101,6 +114,7 @@ void ASRPGCharacter::BeginPlay()
             FStreamableDelegate::CreateUObject(this, &ThisClass::OnAssetLoaded)
         );
     }
+    
 
 }
 
