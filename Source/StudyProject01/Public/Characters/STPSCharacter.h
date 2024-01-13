@@ -24,6 +24,8 @@ public:
 
     float GetRightInputValue() const { return RightInputValue; }
 
+    virtual void Tick(float DeltaSeconds) override;
+
 protected:
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
@@ -33,6 +35,18 @@ private:
     void Look(const FInputActionValue& InValue);
 
     void Attack(const FInputActionValue& InValue);
+
+    void Fire();
+
+    void ToggleTrigger(const FInputActionValue& InValue);
+
+    void StartFire(const FInputActionValue& InValue);
+
+    void StopFire(const FInputActionValue& InValue);
+
+    void StartIronSight(const FInputActionValue& InValue);
+
+    void EndIronSight(const FInputActionValue& InValue);
 
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess))
@@ -45,9 +59,21 @@ private:
     TObjectPtr<class UInputMappingContext> PlayerCharacterInputMappingContext;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess = true))
+
     float ForwardInputValue;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess = true))
     float RightInputValue;
+
+    float TargetFOV = 70.f;
+
+    float CurrentFOV = 70.f;
+
+    bool bIsTriggerToggle = false;
+
+    float FirePerMinute = 600;
+
+    FTimerHandle BetweenShotsTimer;
+
+    float TimeBetweenFire;
 
 };
