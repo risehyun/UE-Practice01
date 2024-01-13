@@ -21,6 +21,8 @@ void USTitleLevelUI::NativeConstruct()
 	SavedGameButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnSavedGameButtonClicked);
 
 	SavedGameButton->SetIsEnabled(false);
+
+	/*
 	const ASPlayerState* PS = GetDefault<ASPlayerState>();
 	if (true == ::IsValid(PS))
 	{
@@ -30,6 +32,7 @@ void USTitleLevelUI::NativeConstruct()
 			SavedGameButton->SetIsEnabled(true);
 		}
 	}
+	*/
 }
 
 void USTitleLevelUI::OnNewGameButtonClicked()
