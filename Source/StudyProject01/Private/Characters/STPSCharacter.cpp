@@ -12,6 +12,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Inputs/SInputConfigData.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Controllers/SPlayerController.h"
 
 ASTPSCharacter::ASTPSCharacter()
     : ASCharacter()
@@ -69,6 +70,13 @@ void ASTPSCharacter::Tick(float DeltaSeconds)
 
     CurrentFOV = FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaSeconds, 35.f);
     CameraComponent->SetFieldOfView(CurrentFOV);
+
+    if (true == ::IsValid(GetController()))
+    {
+        FRotator ControlRotation = GetController()->GetControlRotation();
+        CurrentAimPitch = ControlRotation.Pitch;
+        CurrentAimYaw = ControlRotation.Yaw;
+    }
 }
 
 void ASTPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -160,6 +168,22 @@ void ASTPSCharacter::Fire()
     else
     {
         DrawDebugLine(GetWorld(), MuzzleLocation, CameraEndLocation, FColor(255, 255, 255, 64), false, 0.1f, 0U, 0.5f);
+    }
+
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    if (false == ::IsValid(AnimInstance))
+    {
+        return;
+    }
+
+    if (false == AnimInstance->Montage_IsPlaying(RifleFireAnimMontage))
+    {
+        AnimInstance->Montage_Play(RifleFireAnimMontage);
+    }
+
+    if (true == ::IsValid(FireShake))
+    {
+        PlayerController->ClientStartCameraShake(FireShake);
     }
 }
 

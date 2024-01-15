@@ -24,6 +24,10 @@ public:
 
     float GetRightInputValue() const { return RightInputValue; }
 
+    float GetCurrentAimPitch() const { return CurrentAimPitch; }
+
+    float GetCurrentAimYaw() const { return CurrentAimYaw; }
+
     virtual void Tick(float DeltaSeconds) override;
 
 protected:
@@ -58,7 +62,13 @@ private:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess))
     TObjectPtr<class UInputMappingContext> PlayerCharacterInputMappingContext;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess = true))
+ //   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess = true))
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ASPlayerCharacter, Meta = (AllowPrivateAccess = true))
+    TObjectPtr<class UAnimMontage> RifleFireAnimMontage;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ASPlayerCharacter, Meta = (AllowPrivateAccess = true))
+    TSubclassOf<class UCameraShakeBase> FireShake;
 
     float ForwardInputValue;
 
@@ -75,5 +85,9 @@ private:
     FTimerHandle BetweenShotsTimer;
 
     float TimeBetweenFire;
+
+    float CurrentAimPitch = 0.f;
+
+    float CurrentAimYaw = 0.f;
 
 };
