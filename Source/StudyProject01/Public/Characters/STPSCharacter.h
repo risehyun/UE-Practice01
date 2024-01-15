@@ -30,6 +30,8 @@ public:
 
     virtual void Tick(float DeltaSeconds) override;
 
+    virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 protected:
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
@@ -51,6 +53,9 @@ private:
     void StartIronSight(const FInputActionValue& InValue);
 
     void EndIronSight(const FInputActionValue& InValue);
+
+    UFUNCTION()
+    void OnHittedRagdollRestoreTimerElapsed();
 
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess))
@@ -89,5 +94,15 @@ private:
     float CurrentAimPitch = 0.f;
 
     float CurrentAimYaw = 0.f;
+
+    float TargetRagDollBlendWeight = 0.f;
+
+    float CurrentRagDollBlendWeight = 0.f;
+
+    bool bIsNowRagdollBlending = false;
+
+    FTimerHandle HittedRagdollRestoreTimer;
+
+    FTimerDelegate HittedRagdollRestoreTimerDelegate;
 
 };

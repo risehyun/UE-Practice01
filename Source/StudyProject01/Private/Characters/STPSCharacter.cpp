@@ -13,6 +13,9 @@
 #include "Inputs/SInputConfigData.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Controllers/SPlayerController.h"
+#include "Component/SStatComponent.h"
+#include "Engine/EngineTypes.h"
+#include "Engine/DamageEvents.h"
 
 ASTPSCharacter::ASTPSCharacter()
     : ASCharacter()
@@ -76,6 +79,28 @@ void ASTPSCharacter::Tick(float DeltaSeconds)
         FRotator ControlRotation = GetController()->GetControlRotation();
         CurrentAimPitch = ControlRotation.Pitch;
         CurrentAimYaw = ControlRotation.Yaw;
+    }
+
+    if (true == bIsNowRagdollBlending)
+    {
+        CurrentRagDollBlendWeight = FMath::FInterpTo(CurrentRagDollBlendWeight, TargetRagDollBlendWeight, DeltaSeconds, 10.f);
+
+        FName PivotBoneName = FName(TEXT("spine_01"));
+        GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, CurrentRagDollBlendWeight);
+
+        if (CurrentRagDollBlendWeight - TargetRagDollBlendWeight < KINDA_SMALL_NUMBER)
+        {
+            GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, false);
+            bIsNowRagdollBlending = false;
+        }
+
+        if (true == ::IsValid(GetStatComponent()) && GetStatComponent()->GetCurrentHP() < KINDA_SMALL_NUMBER)
+        {
+            GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(TEXT("root")), 1.f);
+            // 모든 본에 렉돌 가중치
+            GetMesh()->SetSimulatePhysics(true);
+            bIsNowRagdollBlending = false;
+        }
     }
 }
 
@@ -159,11 +184,33 @@ void ASTPSCharacter::Fire()
     QueryParams.bTraceComplex = true;
 
     FVector MuzzleLocation = WeaponSkeletalMeshComponent->GetSocketLocation(FName("MuzzleSocket"));
-    bool bIsCollide = GetWorld()->LineTraceSingleByChannel(HitResult, MuzzleLocation, CameraEndLocation, ECC_Visibility, QueryParams);
+
+    bool bIsCollide = GetWorld()->LineTraceSingleByChannel(HitResult, MuzzleLocation, CameraEndLocation, ECC_GameTraceChannel2, QueryParams);
+    // ECC_Visibility는 캡슐 컴포넌트를 뚫지 못함. 똑같이 Attack의 트레이스 채널로 변경.
 
     if (true == bIsCollide)
     {
         DrawDebugLine(GetWorld(), MuzzleLocation, HitResult.Location, FColor(255, 255, 255, 64), true, 0.1f, 0U, 0.5f);
+
+        ASCharacter* HittedCharacter = Cast<ASCharacter>(HitResult.GetActor());
+        if (true == ::IsValid(HittedCharacter))
+        {
+            FDamageEvent DamageEvent;
+            //HittedCharacter->TakeDamage(10.f, DamageEvent, GetController(), this);
+
+            FString BoneNameString = HitResult.BoneName.ToString();
+            //UKismetSystemLibrary::PrintString(this, BoneNameString);
+            //DrawDebugSphere(GetWorld(), HitResult.Location, 3.f, 16, FColor(255, 0, 0, 255), true, 20.f, 0U, 5.f);
+
+            if (true == BoneNameString.Equals(FString(TEXT("HEAD")), ESearchCase::IgnoreCase))
+            {
+                HittedCharacter->TakeDamage(100.f, DamageEvent, GetController(), this);
+            }
+            else
+            {
+                HittedCharacter->TakeDamage(10.f, DamageEvent, GetController(), this);
+            }
+        }
     }
     else
     {
@@ -203,4 +250,43 @@ void ASTPSCharacter::StartFire(const FInputActionValue& InValue)
 void ASTPSCharacter::StopFire(const FInputActionValue& InValue)
 {
     GetWorldTimerManager().ClearTimer(BetweenShotsTimer);
+}
+
+float ASTPSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+    float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+    if (false == ::IsValid(GetStatComponent()))
+    {
+        return ActualDamage;
+    }
+
+    if (GetStatComponent()->GetCurrentHP() < KINDA_SMALL_NUMBER)
+    {
+        GetMesh()->SetSimulatePhysics(true);
+    }
+    else
+    {
+        FName PivotBoneName = FName(TEXT("spine_01"));
+        GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, true);
+        //float BlendWeight = 1.f; // 랙돌 포즈에 완전 치우쳐지게끔 가중치를 1.f로 지정.
+        //GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, BlendWeight);
+        TargetRagDollBlendWeight = 1.f;
+
+        HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
+        GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
+    }
+
+    return ActualDamage;
+}
+
+void ASTPSCharacter::OnHittedRagdollRestoreTimerElapsed()
+{
+    FName PivotBoneName = FName(TEXT("spine_01"));
+    //GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, false);
+    //float BlendWeight = 0.f;
+    //GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, BlendWeight);
+    TargetRagDollBlendWeight = 0.f;
+    CurrentRagDollBlendWeight = 1.f;
+    bIsNowRagdollBlending = true;
 }
