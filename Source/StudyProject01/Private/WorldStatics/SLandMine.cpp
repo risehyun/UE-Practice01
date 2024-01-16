@@ -7,9 +7,11 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/Engine.h"
 
 // Sets default values
-ASLandMine::ASLandMine()
+ASLandMine::ASLandMine() : bIsExploded(false)
 {
     PrimaryActorTick.bCanEverTick = true;
 
@@ -91,27 +93,53 @@ void ASLandMine::OnLandMineBeginOverlap(AActor* OverlappedActor, AActor* OtherAc
 {
     if (true == HasAuthority())
     {
-        UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ASLandMine::OnLandMineBeginOverlap() has been called in Server PC.")));
+        UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ASLandMine::OnLandMineBeginOverlap(%d) has been called in Server PC."), bIsExploded));
     }
     else
     {
         if (GetOwner() == UGameplayStatics::GetPlayerController(this, 0))
         {
-            UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ASLandMine::OnLandMineBeginOverlap() has been called in OwningClient PC.")));
+            UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ASLandMine::OnLandMineBeginOverlap(%d) has been called in OwningClient PC."), bIsExploded));
         }
         else
         {
-            UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ASLandMine::OnLandMineBeginOverlap() has been called in OtherClient PC.")));
+            UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ASLandMine::OnLandMineBeginOverlap(%d) has been called in OtherClient PC."), bIsExploded));
         }
     }
 
-    if (true == HasAuthority())
+    //if (true == HasAuthority())
+    //{
+    //    SpawnEffect_NetMulticast();
+    //}
+
+    if (true == HasAuthority() && false == bIsExploded)
     {
         SpawnEffect_NetMulticast();
+        bIsExploded = true;
     }
 }
 
 void ASLandMine::SpawnEffect_NetMulticast_Implementation()
 {
     ParticleSystemComponent->Activate(true);
+
+    if (true == ::IsValid(ExplodedMaterial))
+    {
+        BodyStaticMeshComponent->SetMaterial(0, ExplodedMaterial);
+    }
+}
+
+void ASLandMine::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(ThisClass, bIsExploded);
+}
+
+void ASLandMine::OnRep_IsExploded()
+{
+    if (true == bIsExploded)
+    {
+        BodyStaticMeshComponent->SetMaterial(0, ExplodedMaterial);
+    }
 }

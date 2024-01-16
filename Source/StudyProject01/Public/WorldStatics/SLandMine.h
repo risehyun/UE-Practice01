@@ -31,6 +31,11 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void SpawnEffect_NetMulticast();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION()
+	void OnRep_IsExploded();
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASLandMine", Meta = (AllowPrivateAccess))
 	TObjectPtr<class UBoxComponent> BodyBoxComponent;
@@ -41,4 +46,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASLandMine", meta = (AllowPrivateAccess))
 	TObjectPtr<class UParticleSystemComponent> ParticleSystemComponent;
 
+//	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "ASLandMine", meta = (AllowPrivateAccess))
+//	uint8 bIsExploded : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASLandMine", meta = (AllowPrivateAccess))
+	TObjectPtr<class UMaterial> ExplodedMaterial;
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsExploded, VisibleAnywhere, BlueprintReadOnly, Category = "ASLandMine", meta = (AllowPrivateAccess))
+    uint8 bIsExploded : 1;
 };
