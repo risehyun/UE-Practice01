@@ -21,6 +21,11 @@ public:
 
     void ToggleMenu();
 
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "ASPlayerController", Meta = (AllowPrivateAccess))
+    FText NotificationText;
+
 protected:
     virtual void BeginPlay() override;
 
@@ -33,6 +38,9 @@ protected:
     TObjectPtr<class UUserWidget> MenuUIInstance;
 
     bool bIsMenuOn = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ASPlayerController, Meta = (AllowPrivateAccess))
+    TSubclassOf<class UUserWidget> NotificationTextUIClass;
 
 private:
     void LeftRight(float InAxisValue);

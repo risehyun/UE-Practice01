@@ -18,6 +18,7 @@ class STUDYPROJECT01_API USLobbyLevelUI : public UUserWidget
 protected:
     virtual void NativeConstruct() override;
 
+
 private:
     UFUNCTION()
     void OnRedTeamButtonClicked();
@@ -42,6 +43,9 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = USLobbyLevelUI, Meta = (AllowPrivateAccess, BindWidget))
     TObjectPtr<class UButton> SubmitButton;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = USLobbyLevelUI, Meta = (AllowPrivateAccess, BindWidget))
+    TObjectPtr<class UEditableText> EditServerIP;
 
     TWeakObjectPtr<class USkeletalMeshComponent> CurrentSkeletalMeshComponent;
 

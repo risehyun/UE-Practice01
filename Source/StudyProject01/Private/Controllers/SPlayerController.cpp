@@ -4,8 +4,11 @@
 #include "UI/SHUD.h"
 #include "Game/SPlayerState.h"
 #include "Component/SStatComponent.h"
-#include "Characters/SRPGCharacter.h"
+// #include "Characters/SRPGCharacter.h"
+#include "Characters/STPSCharacter.h"
 #include "Blueprint/UserWidget.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/Engine.h"
 
 ASPlayerController::ASPlayerController()
 {
@@ -32,6 +35,11 @@ void ASPlayerController::BeginPlay()
     FInputModeGameOnly InputModeGameOnly;
     SetInputMode(InputModeGameOnly);
 
+    if (true == HasAuthority())
+    {
+        return;
+    }
+
     if (true == ::IsValid(HUDWidgetClass))
     {
         HUDWidget = CreateWidget<USHUD>(this, HUDWidgetClass);
@@ -39,11 +47,11 @@ void ASPlayerController::BeginPlay()
         {
             HUDWidget->AddToViewport();
 
-            ASPlayerState* SPlayerState = GetPlayerState<ASPlayerState>();
-            if (true == ::IsValid(SPlayerState))
-            {
-                HUDWidget->BindPlayerState(SPlayerState);
-            }
+            //ASPlayerState* SPlayerState = GetPlayerState<ASPlayerState>();
+            //if (true == ::IsValid(SPlayerState))
+            //{
+            //    HUDWidget->BindPlayerState(SPlayerState);
+            //}
 
             ASCharacter* PC = GetPawn<ASCharacter>();
             if (true == ::IsValid(PC))
@@ -54,6 +62,17 @@ void ASPlayerController::BeginPlay()
                     HUDWidget->BindStatComponent(StatComponent);
                 }
             }
+
+            FTimerHandle TimerHandle;
+
+            // Ch04 Pawn의 이벤트 함수 절 참고.
+            GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this]() -> void {
+                ASPlayerState* SPlayerState = GetPlayerState<ASPlayerState>();
+                if (true == ::IsValid(SPlayerState))
+                {
+                    HUDWidget->BindPlayerState(SPlayerState);
+                }
+                }), 0.5f, false);
         }
     }
 
@@ -76,6 +95,17 @@ void ASPlayerController::BeginPlay()
             CrosshairUI->AddToViewport(1);
 
             CrosshairUI->SetVisibility(ESlateVisibility::Visible);
+        }
+    }
+
+    if (true == ::IsValid(NotificationTextUIClass))
+    {
+        UUserWidget* NotificationTextUI = CreateWidget<UUserWidget>(this, NotificationTextUIClass);
+        if (true == ::IsValid(NotificationTextUI))
+        {
+            NotificationTextUI->AddToViewport(1);
+
+            NotificationTextUI->SetVisibility(ESlateVisibility::Visible);
         }
     }
 
@@ -106,4 +136,11 @@ void ASPlayerController::ToggleMenu()
     }
 
     bIsMenuOn = !bIsMenuOn;
+}
+
+void ASPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(ThisClass, NotificationText);
 }
