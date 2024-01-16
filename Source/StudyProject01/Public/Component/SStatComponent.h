@@ -29,6 +29,8 @@ public:
 
 	void SetCurrentHP(float InCurrentHP);
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -38,12 +40,14 @@ public:
 	FOnCurrentHPChangeDelegate OnCurrentHPChangeDelegate;
 
 	FOnMaxHPChangeDelegate OnMaxHPChangeDelegate;
+
+
 		
 private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "USStatComponent", Meta = (AllowPrivateAccess))
 	TObjectPtr<class USMyGameInstance> GameInstance;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "USStatComponent", Meta = (AllowPrivateAccess))
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "USStatComponent", meta = (AllowPrivateAccess))
 	float MaxHP;
 
 	// <Transient>
@@ -52,10 +56,13 @@ private:
 	// 직렬화를 하는 경우 매번 다시 직렬화를 해줘야 한다.
 	// 따라서 메모리를 차지하고 성능상의 이점들을 악화시킬 수 있는 이런 요소를 배제하기 위해 따로 쓴다.
 
-	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category = "USStatComponent", Meta = (AllowPrivateAccess))
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "USStatComponent", meta = (AllowPrivateAccess))
 	float CurrentHP;
 
 	UFUNCTION()
 	void OnCurrentLevelChanged(int32 InOldCurrentLevel, int32 InNewCurrentLevel);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void OnCurrentHPChanged_NetMulticast(float InOldCurrentHP, float InNewCurrentHP);
 
 };

@@ -11,7 +11,10 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Inputs/SInputConfigData.h"
+
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
 #include "Controllers/SPlayerController.h"
 #include "Component/SStatComponent.h"
 #include "WorldStatics/SLandMine.h"
@@ -201,6 +204,13 @@ void ASTPSCharacter::EndIronSight(const FInputActionValue& InValue)
 
 void ASTPSCharacter::Fire()
 {
+    // 공격은 각 클라이언트가 공격 버튼을 눌렀을 때에만 개별 작동해야 한다.
+    // 따라서 서버이거나 other 클라이언트인 경우 아래의 로직을 실행하지 않도록 return 해준다.
+    if (true == HasAuthority() || GetOwner() != UGameplayStatics::GetPlayerController(this, 0))
+    {
+        return;
+    }
+
     APlayerController* PlayerController = Cast<APlayerController>(GetController());
     if (false == ::IsValid(PlayerController))
     {
@@ -224,7 +234,7 @@ void ASTPSCharacter::Fire()
 
     if (true == bIsCollide)
     {
-        DrawDebugLine(GetWorld(), MuzzleLocation, HitResult.Location, FColor(255, 255, 255, 64), true, 0.1f, 0U, 0.5f);
+        //DrawDebugLine(GetWorld(), MuzzleLocation, HitResult.Location, FColor(255, 255, 255, 64), true, 0.1f, 0U, 0.5f);
 
         ASCharacter* HittedCharacter = Cast<ASCharacter>(HitResult.GetActor());
         if (true == ::IsValid(HittedCharacter))
@@ -238,17 +248,21 @@ void ASTPSCharacter::Fire()
 
             if (true == BoneNameString.Equals(FString(TEXT("HEAD")), ESearchCase::IgnoreCase))
             {
-                HittedCharacter->TakeDamage(100.f, DamageEvent, GetController(), this);
+                //HittedCharacter->TakeDamage(100.f, DamageEvent, GetController(), this);
+                ApplyDamageAndDrawLine_Server(MuzzleLocation, HitResult.Location, HittedCharacter, 100.f, DamageEvent, GetController(), this);
             }
             else
             {
-                HittedCharacter->TakeDamage(10.f, DamageEvent, GetController(), this);
+                //HittedCharacter->TakeDamage(10.f, DamageEvent, GetController(), this);
+                ApplyDamageAndDrawLine_Server(MuzzleLocation, HitResult.Location, HittedCharacter, 10.f, DamageEvent, GetController(), this);
             }
         }
     }
     else
     {
-        DrawDebugLine(GetWorld(), MuzzleLocation, CameraEndLocation, FColor(255, 255, 255, 64), false, 0.1f, 0U, 0.5f);
+        //DrawDebugLine(GetWorld(), MuzzleLocation, CameraEndLocation, FColor(255, 255, 255, 64), false, 0.1f, 0U, 0.5f);
+        FDamageEvent DamageEvent;
+        ApplyDamageAndDrawLine_Server(MuzzleLocation, CameraEndLocation, nullptr, 0.f, DamageEvent, GetController(), this);
     }
 
     UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -260,12 +274,18 @@ void ASTPSCharacter::Fire()
     if (false == AnimInstance->Montage_IsPlaying(RifleFireAnimMontage))
     {
         AnimInstance->Montage_Play(RifleFireAnimMontage);
+        PlayAttackMontage_Server();
     }
 
     if (true == ::IsValid(FireShake))
     {
-        PlayerController->ClientStartCameraShake(FireShake);
+        if (GetOwner() == UGameplayStatics::GetPlayerController(this, 0))
+        { // 다른 클라가 사격했는데, 내 PC 화면이 흔들리지 않게끔 함.
+            PlayerController->ClientStartCameraShake(FireShake);
+        }
     }
+
+
 }
 
 void ASTPSCharacter::ToggleTrigger(const FInputActionValue& InValue)
@@ -290,6 +310,7 @@ float ASTPSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
 {
     float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
+    /*
     if (false == ::IsValid(GetStatComponent()))
     {
         return ActualDamage;
@@ -310,6 +331,9 @@ float ASTPSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
         HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
         GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
     }
+    */
+
+    PlayRagdoll_NetMulticast();
 
     return ActualDamage;
 }
@@ -373,5 +397,63 @@ void ASTPSCharacter::SpawnLandMine_Server_Implementation()
         FVector SpawnedLocation = (GetActorLocation() + GetActorForwardVector() * 200.f) - FVector(0.f, 0.f, 90.f);
         ASLandMine* SpawnedLandMine = GetWorld()->SpawnActor<ASLandMine>(LandMineClass, SpawnedLocation, FRotator::ZeroRotator);
         SpawnedLandMine->SetOwner(GetController());
+    }
+}
+
+void ASTPSCharacter::PlayAttackMontage_Server_Implementation()
+{
+    PlayAttackMontage_NetMulticast();
+}
+
+void ASTPSCharacter::PlayAttackMontage_NetMulticast_Implementation()
+{
+    if (false == HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0))
+    {
+        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+        if (false == ::IsValid(AnimInstance))
+        {
+            return;
+        }
+
+        if (false == AnimInstance->Montage_IsPlaying(RifleFireAnimMontage))
+        {
+            AnimInstance->Montage_Play(RifleFireAnimMontage);
+        }
+    }
+}
+
+void ASTPSCharacter::ApplyDamageAndDrawLine_Server_Implementation(const FVector& InDrawStart, const FVector& InDrawEnd, ACharacter* InHittedCharacter, float InDamage, FDamageEvent const& InDamageEvent, AController* InEventInstigator, AActor* InDamageCauser)
+{
+    if (true == ::IsValid(InHittedCharacter))
+    {
+        InHittedCharacter->TakeDamage(InDamage, InDamageEvent, InEventInstigator, InDamageCauser);
+    }
+
+    DrawLine_NetMulticast(InDrawStart, InDrawEnd);
+}
+
+void ASTPSCharacter::DrawLine_NetMulticast_Implementation(const FVector& InDrawStart, const FVector& InDrawEnd)
+{
+    DrawDebugLine(GetWorld(), InDrawStart, InDrawEnd, FColor(255, 255, 255, 64), false, 0.1f, 0U, 0.5f);
+}
+
+void ASTPSCharacter::PlayRagdoll_NetMulticast_Implementation()
+{
+    if (false == ::IsValid(GetStatComponent()))
+    {
+        return;
+    }
+
+    if (GetStatComponent()->GetCurrentHP() < KINDA_SMALL_NUMBER)
+    {
+        GetMesh()->SetSimulatePhysics(true);
+    }
+    else
+    {
+        FName PivotBoneName = FName(TEXT("spine_01"));
+        GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, true);
+        TargetRagDollBlendWeight = 1.f;
+        HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
+        GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
     }
 }

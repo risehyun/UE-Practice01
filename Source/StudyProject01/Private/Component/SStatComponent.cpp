@@ -6,6 +6,8 @@
 #include "Game/SMyGameInstance.h"
 #include "Characters/SRPGCharacter.h"
 #include "Game/SPlayerState.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/Engine.h"
 
 // Sets default values for this component's properties
 USStatComponent::USStatComponent()
@@ -58,6 +60,14 @@ void USStatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	// ...
 }
 
+void USStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(ThisClass, MaxHP);
+    DOREPLIFETIME(ThisClass, CurrentHP);
+}
+
 void USStatComponent::SetMaxHP(float InMaxHP)
 {
     if (true == OnMaxHPChangeDelegate.IsBound())
@@ -82,10 +92,25 @@ void USStatComponent::SetCurrentHP(float InCurrentHP)
         OnOutOfCurrentHPDelegate.Broadcast();
         CurrentHP = 0.f;
     }
+
+    OnCurrentHPChanged_NetMulticast(CurrentHP, CurrentHP);
 }
 
 void USStatComponent::OnCurrentLevelChanged(int32 InOldCurrentLevel, int32 InNewCurrentLevel)
 {
     SetMaxHP(GameInstance->GetCharacterStatDataTableRow(InNewCurrentLevel)->MaxHP);
     SetCurrentHP(GameInstance->GetCharacterStatDataTableRow(InNewCurrentLevel)->MaxHP);
+}
+
+void USStatComponent::OnCurrentHPChanged_NetMulticast_Implementation(float InOldCurrentHP, float InNewCurrentHP)
+{
+    if (true == OnCurrentHPChangeDelegate.IsBound())
+    {
+        OnCurrentHPChangeDelegate.Broadcast(InOldCurrentHP, InNewCurrentHP);
+    }
+
+    if (InNewCurrentHP < KINDA_SMALL_NUMBER)
+    {
+        OnOutOfCurrentHPDelegate.Broadcast();
+    }
 }

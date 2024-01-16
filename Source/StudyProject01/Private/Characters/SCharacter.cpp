@@ -41,6 +41,11 @@ ASCharacter::ASCharacter()
   //  bIsDead = false;
 
     StatComponent = CreateDefaultSubobject<USStatComponent>(TEXT("StatComponent"));
+
+    if (true == HasAuthority())
+    {
+        StatComponent->SetIsReplicated(true);
+    }
 }
 
 void ASCharacter::BeginPlay()
