@@ -14,9 +14,12 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Controllers/SPlayerController.h"
 #include "Component/SStatComponent.h"
+#include "WorldStatics/SLandMine.h"
+#include "Net/UnrealNetwork.h"
+
 #include "Engine/EngineTypes.h"
 #include "Engine/DamageEvents.h"
-#include "WorldStatics/SLandMine.h"
+#include "Engine/Engine.h"
 
 ASTPSCharacter::ASTPSCharacter()
     : ASCharacter()
@@ -103,6 +106,34 @@ void ASTPSCharacter::Tick(float DeltaSeconds)
             bIsNowRagdollBlending = false;
         }
     }
+
+    if (true == ::IsValid(GetController()))
+    {
+        PreviousAimPitch = CurrentAimPitch;
+        PreviousAimYaw = CurrentAimYaw;
+
+        FRotator ControlRotation = GetController()->GetControlRotation();
+        CurrentAimPitch = ControlRotation.Pitch;
+        CurrentAimYaw = ControlRotation.Yaw;
+
+        if (PreviousAimPitch != CurrentAimPitch || PreviousAimYaw != CurrentAimYaw)
+        {
+            if (false == HasAuthority()) // 서버에선 원래 update 되지 않았으므로, 굳이 호출할 필요 없음.
+            {
+                UpdateAimValue_Server(CurrentAimPitch, CurrentAimYaw);
+            }
+        }
+    }
+
+    if (PreviousForwardInputValue != ForwardInputValue || PreviousRightInputValue != RightInputValue)
+    {
+        if (false == HasAuthority()) // 서버에선 원래 update 되지 않았으므로, 굳이 호출할 필요 없음.
+        {
+            UpdateInputValue_Server(ForwardInputValue, RightInputValue);
+        }
+    }
+
+
 }
 
 void ASTPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -283,6 +314,16 @@ float ASTPSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
     return ActualDamage;
 }
 
+void ASTPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(ThisClass, ForwardInputValue);
+    DOREPLIFETIME(ThisClass, RightInputValue);
+    DOREPLIFETIME(ThisClass, CurrentAimPitch);
+    DOREPLIFETIME(ThisClass, CurrentAimYaw);
+}
+
 void ASTPSCharacter::OnHittedRagdollRestoreTimerElapsed()
 {
     FName PivotBoneName = FName(TEXT("spine_01"));
@@ -306,6 +347,18 @@ void ASTPSCharacter::SpawnLandMine(const FInputActionValue& InValue)
     */
 
     SpawnLandMine_Server();
+}
+
+void ASTPSCharacter::UpdateInputValue_Server_Implementation(const float& InForwardInputValue, const float& InRightInputValue)
+{
+    ForwardInputValue = InForwardInputValue;
+    RightInputValue = InRightInputValue;
+}
+
+void ASTPSCharacter::UpdateAimValue_Server_Implementation(const float& InAimPitchValue, const float& InAimYawValue)
+{
+    CurrentAimPitch = InAimPitchValue;
+    CurrentAimYaw = InAimYawValue;
 }
 
 bool ASTPSCharacter::SpawnLandMine_Server_Validate()

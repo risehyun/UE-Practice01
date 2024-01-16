@@ -32,6 +32,8 @@ public:
 
     virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
@@ -62,6 +64,13 @@ private:
     UFUNCTION(Server, Reliable, WithValidation)
     void SpawnLandMine_Server();
 
+    UFUNCTION(Server, Unreliable) // 한 두번 정도는 씹혀도 되기 때문.
+    void UpdateInputValue_Server(const float& InForwardInputValue, const float& InRightInputValue);
+
+    UFUNCTION(Server, Unreliable)
+    void UpdateAimValue_Server(const float& InAimPitchValue, const float& InAimYawValue);
+
+
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess))
     TObjectPtr<USkeletalMeshComponent> WeaponSkeletalMeshComponent;
@@ -72,7 +81,17 @@ private:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess))
     TObjectPtr<class UInputMappingContext> PlayerCharacterInputMappingContext;
 
- //   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess = true))
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess = true))
+    float ForwardInputValue;
+
+    float PreviousForwardInputValue = 0.f;
+
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess = true))
+    float RightInputValue;
+
+    float PreviousRightInputValue = 0.f;
+
+
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ASPlayerCharacter, Meta = (AllowPrivateAccess = true))
     TObjectPtr<class UAnimMontage> RifleFireAnimMontage;
@@ -83,9 +102,17 @@ private:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ASPlayerCharacter, Meta = (AllowPrivateAccess = true))
     TSubclassOf<class AActor> LandMineClass;
 
-    float ForwardInputValue;
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess = true))
+    float CurrentAimPitch = 0.f;
 
-    float RightInputValue;
+    float PreviousAimPitch = 0.f;
+
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "ASTPSCharacter", meta = (AllowPrivateAccess = true))
+    float CurrentAimYaw = 0.f;
+
+    float PreviousAimYaw = 0.f;
+
+
 
     float TargetFOV = 70.f;
 
@@ -98,10 +125,6 @@ private:
     FTimerHandle BetweenShotsTimer;
 
     float TimeBetweenFire;
-
-    float CurrentAimPitch = 0.f;
-
-    float CurrentAimYaw = 0.f;
 
     float TargetRagDollBlendWeight = 0.f;
 
