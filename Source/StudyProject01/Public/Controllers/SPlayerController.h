@@ -26,6 +26,17 @@ public:
     UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "ASPlayerController", Meta = (AllowPrivateAccess))
     FText NotificationText;
 
+    void OnOwningCharacterDead();
+
+    UFUNCTION(Client, Reliable)
+    void ShowWinnerUI();
+
+    UFUNCTION(Client, Reliable)
+    void ShowLooserUI(int32 InRanking);
+
+    UFUNCTION(Client, Reliable)
+    void ReturnToLobby();
+
 protected:
     virtual void BeginPlay() override;
 
@@ -41,6 +52,12 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ASPlayerController, Meta = (AllowPrivateAccess))
     TSubclassOf<class UUserWidget> NotificationTextUIClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ASPlayerController, Meta = (AllowPrivateAccess))
+    TSubclassOf<class USGameResultWidget> WinnerUIClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ASPlayerController, Meta = (AllowPrivateAccess))
+    TSubclassOf<class USGameResultWidget> LooserUIClass;
 
 private:
     void LeftRight(float InAxisValue);
